@@ -1,398 +1,1003 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente de Beneficios Sociales</title>
-    <style>
-        /* =========================================
-           2. Arquitectura del Color y Contraste
-           3. Sistema Tipográfico y Legibilidad
-           ========================================= */
-        :root {
-            --azul-oscuro: #1A365D;    /* Identidad y Cabecera */
-            --verde-azulado: #285E61;  /* Acciones y Apoyo */
-            --ambar-oscuro: #975A16;   /* Alertas, Críticos y Foco */
-            --fondo-claro: #F7FAFC;
-            --texto-oscuro: #1A202C;
-            --blanco: #FFFFFF;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Puente — Orientación en vivienda y beneficios sociales</title>
+<meta name="description" content="Asistente virtual disponible 24 horas para orientarte en postulaciones de vivienda y beneficios sociales, con acceso directo a una persona cuando lo necesites.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Variables y base ---------- */
+  :root{
+    --color-primary:#1A365D;      /* Azul oscuro — identidad */
+    --color-primary-dark:#122647;
+    --color-secondary:#285E61;    /* Verde azulado — acciones */
+    --color-secondary-dark:#1E4749;
+    --color-alert:#975A16;        /* Ámbar oscuro — advertencia (texto sobre blanco) */
+    --color-alert-bg:#FBF0E1;
+    --color-success:#2F855A;
+    --color-success-bg:#EAF6EF;
+    --color-bg:#F2F6F5;
+    --color-surface:#FFFFFF;
+    --color-text:#1C2530;
+    --color-text-muted:#4B5A64;
+    --color-border:#D8E2E0;
+    --color-focus:#C05621;
+    --font-head:'Roboto', Arial, sans-serif;
+    --font-body:'Open Sans', Arial, sans-serif;
+    --radius-sm:6px;
+    --radius-md:12px;
+    --radius-lg:20px;
+    --shadow-panel:0 12px 32px rgba(20,35,45,0.22);
+    --touch-min:44px;
+  }
 
-        body {
-            font-family: Arial, Roboto, 'Open Sans', sans-serif;
-            background-color: #E2E8F0;
-            margin: 0;
-            padding: 0;
-            text-align: left; /* Alineación justificada prohibida */
-            color: var(--texto-oscuro);
-            font-size: 16px;
-            line-height: 1.5;
-        }
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:var(--font-body);
+    background:var(--color-bg);
+    color:var(--color-text);
+    line-height:1.6;
+    font-size:1rem;
+    -webkit-text-size-adjust:100%;
+  }
+  h1,h2,h3,h4{
+    font-family:var(--font-head);
+    color:var(--color-primary);
+    line-height:1.25;
+    margin:0 0 0.6em 0;
+    font-weight:700;
+  }
+  p{margin:0 0 1em 0;max-width:62ch;}
+  a{color:var(--color-secondary-dark);}
+  ul{margin:0;padding:0;}
+  img,svg{display:block;max-width:100%;}
+  button{font-family:inherit;}
 
-        /* Restricciones de Estilo: Cursivas y Mayúsculas sostenidas prohibidas (aplicado por omisión) */
+  /* Nunca cursivas, nunca mayúsculas sostenidas en bloques, nunca justificado */
+  em, i{font-style:normal;font-weight:600;}
+  .container{max-width:68rem;margin:0 auto;padding-inline:1.25rem;}
 
-        /* =========================================
-           4. Diseño del Widget y Adaptabilidad
-           ========================================= */
-        #chatbot-launcher {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: var(--azul-oscuro);
-            color: var(--blanco);
-            border: none;
-            border-radius: 8px;
-            min-height: 44px; /* Mandatorio: Objetivo Táctil */
-            min-width: 44px;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
+  .sr-only{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+  .skip-link{
+    position:absolute;top:-3rem;left:1rem;background:var(--color-primary);
+    color:#fff;padding:0.75rem 1.25rem;border-radius:var(--radius-sm);
+    z-index:200;transition:top .2s ease;
+  }
+  .skip-link:focus{top:1rem;}
 
-        #chatbot-widget {
-            display: none;
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 90%;
-            max-width: 400px;
-            min-width: 320px; /* Reflow a 320px garantizado */
-            height: 80vh;
-            max-height: 600px;
-            background-color: var(--fondo-claro);
-            border-radius: 8px;
-            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-            overflow: hidden;
-            border: 1px solid #CBD5E0;
-        }
+  /* ---------- Foco visible de alto contraste ---------- */
+  a:focus-visible,button:focus-visible,input:focus-visible,
+  [tabindex]:focus-visible{
+    outline:3px solid var(--color-focus);
+    outline-offset:2px;
+    border-radius:4px;
+  }
+  .on-dark:focus-visible{outline-color:#FFFFFF;}
 
-        #chatbot-widget.hidden {
-            display: none;
-        }
+  /* ---------- Botones ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;
+    min-height:var(--touch-min);padding:0.7rem 1.4rem;
+    border-radius:var(--radius-sm);border:2px solid transparent;
+    font-family:var(--font-head);font-weight:700;font-size:1rem;
+    cursor:pointer;text-decoration:none;line-height:1.2;
+  }
+  .btn-primary{background:var(--color-secondary);color:#fff;}
+  .btn-primary:hover{background:var(--color-secondary-dark);}
+  .btn-outline{background:transparent;color:var(--color-primary);border-color:var(--color-primary);}
+  .btn-outline:hover{background:var(--color-primary);color:#fff;}
+  .btn-text{background:none;border:none;color:var(--color-secondary-dark);
+    font-family:var(--font-head);font-weight:700;padding:0.5rem 0.25rem;
+    min-height:var(--touch-min);cursor:pointer;text-decoration:underline;}
 
-        /* =========================================
-           5. Navegabilidad y Objetivos de Interacción
-           ========================================= */
-        /* Foco Visual de Alto Contraste */
-        *:focus {
-            outline: 4px solid var(--ambar-oscuro) !important;
-            outline-offset: 2px;
-        }
+  .icon{width:24px;height:24px;flex-shrink:0;}
 
-        .chat-header {
-            background-color: var(--azul-oscuro);
-            color: var(--blanco);
-            padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+  /* ---------- Header ---------- */
+  header.site-header{
+    background:var(--color-surface);border-bottom:1px solid var(--color-border);
+    position:sticky;top:0;z-index:50;
+  }
+  .header-row{
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+    gap:0.75rem;padding-block:0.85rem;
+  }
+  .logo{
+    display:flex;align-items:center;gap:0.6rem;font-family:var(--font-head);
+    font-weight:700;font-size:1.35rem;color:var(--color-primary);text-decoration:none;
+  }
+  .logo .mark{
+    width:2.25rem;height:2.25rem;border-radius:8px;background:var(--color-primary);
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-head);font-weight:700;font-size:1.05rem;
+  }
+  nav.site-nav{display:flex;flex-wrap:wrap;gap:1.4rem;align-items:center;}
+  nav.site-nav a{
+    color:var(--color-text);text-decoration:none;font-weight:600;
+    padding:0.5rem 0.1rem;border-bottom:2px solid transparent;
+  }
+  nav.site-nav a:hover{border-bottom-color:var(--color-secondary);}
+  .header-actions{display:flex;align-items:center;gap:0.75rem;}
 
-        .chat-header h2 {
-            margin: 0;
-            font-size: 18px;
-            font-weight: bold;
-        }
+  /* ---------- Hero ---------- */
+  .hero{padding-block:3rem 3.5rem;}
+  .hero-grid{
+    display:grid;grid-template-columns:1fr;gap:2.5rem;align-items:center;
+  }
+  .hero h1{font-size:2.1rem;letter-spacing:-0.01em;}
+  .hero .lede{font-size:1.1rem;color:var(--color-text-muted);}
+  .hero-ctas{display:flex;flex-wrap:wrap;gap:1rem;margin-top:1.5rem;}
+  .trust-line{
+    display:flex;align-items:center;gap:0.5rem;margin-top:1.75rem;
+    color:var(--color-text-muted);font-size:0.92rem;
+  }
+  .trust-line .icon{color:var(--color-success);}
 
-        .close-btn {
-            background: transparent;
-            color: var(--blanco);
-            border: none;
-            font-size: 20px;
-            min-height: 44px; /* Mandatorio */
-            min-width: 44px;
-            cursor: pointer;
-        }
+  /* Vista previa de chat decorativa en el hero */
+  .chat-mock{
+    background:var(--color-surface);border:1px solid var(--color-border);
+    border-radius:var(--radius-lg);padding:1.25rem;box-shadow:var(--shadow-panel);
+  }
+  .chat-mock-head{
+    display:flex;align-items:center;gap:0.6rem;padding-bottom:0.85rem;
+    margin-bottom:0.85rem;border-bottom:1px solid var(--color-border);
+  }
+  .chat-mock-head .dot{width:0.6rem;height:0.6rem;border-radius:50%;background:var(--color-success);}
+  .chat-mock-head span{font-family:var(--font-head);font-weight:700;color:var(--color-primary);}
+  .mock-bubble{max-width:85%;padding:0.65rem 0.9rem;border-radius:var(--radius-md);
+    margin-bottom:0.6rem;font-size:0.95rem;}
+  .mock-bubble.bot{background:var(--color-bg);color:var(--color-text);border-bottom-left-radius:4px;}
+  .mock-bubble.user{background:var(--color-secondary);color:#fff;margin-left:auto;
+    border-bottom-right-radius:4px;}
 
-        /* =========================================
-           6. Flujo de Diálogo y Traspaso Humano
-           ========================================= */
-        .chat-history {
-            flex-grow: 1;
-            padding: 16px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+  /* ---------- Secciones generales ---------- */
+  section{padding-block:3rem;}
+  .section-head{max-width:42rem;margin-bottom:2rem;}
+  .section-head p{color:var(--color-text-muted);}
 
-        .message {
-            max-width: 85%;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 16px;
-        }
+  /* Qué puedes resolver — lista con divisores, no tarjetas idénticas */
+  .feature-list{border-top:1px solid var(--color-border);}
+  .feature-row{
+    display:grid;grid-template-columns:3rem 1fr;gap:1.1rem;
+    padding-block:1.5rem;border-bottom:1px solid var(--color-border);
+  }
+  .feature-row .icon-wrap{
+    width:3rem;height:3rem;border-radius:var(--radius-sm);
+    background:var(--color-success-bg);color:var(--color-success);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .feature-row h3{margin-bottom:0.35rem;font-size:1.1rem;}
+  .feature-row p{color:var(--color-text-muted);margin-bottom:0;}
 
-        .message.bot {
-            background-color: var(--blanco);
-            color: var(--texto-oscuro);
-            border: 1px solid #E2E8F0;
-            align-self: flex-start;
-        }
+  /* Cómo funciona — secuencia real: numeración legítima */
+  .steps{position:relative;padding-left:0;}
+  .step{
+    display:grid;grid-template-columns:2.75rem 1fr;gap:1.1rem;
+    position:relative;padding-bottom:2rem;
+  }
+  .step:last-child{padding-bottom:0;}
+  .step-num{
+    width:2.75rem;height:2.75rem;border-radius:50%;background:var(--color-primary);
+    color:#fff;font-family:var(--font-head);font-weight:700;font-size:1.05rem;
+    display:flex;align-items:center;justify-content:center;position:relative;z-index:1;
+  }
+  .step:not(:last-child)::before{
+    content:"";position:absolute;left:1.35rem;top:2.75rem;bottom:0;
+    width:2px;background:var(--color-border);
+  }
+  .step h3{margin-bottom:0.3rem;font-size:1.05rem;}
+  .step p{color:var(--color-text-muted);margin-bottom:0;}
 
-        .message.user {
-            background-color: var(--verde-azulado);
-            color: var(--blanco);
-            align-self: flex-end;
-        }
+  /* Accesibilidad */
+  .a11y-section{background:var(--color-surface);border-top:1px solid var(--color-border);
+    border-bottom:1px solid var(--color-border);}
+  .a11y-grid{display:grid;grid-template-columns:1fr;gap:1.25rem;}
+  .a11y-item{display:flex;gap:0.85rem;}
+  .a11y-item .icon-wrap{
+    width:2.5rem;height:2.5rem;flex-shrink:0;border-radius:50%;
+    background:var(--color-bg);color:var(--color-primary);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .a11y-item h3{font-size:1rem;margin-bottom:0.25rem;}
+  .a11y-item p{color:var(--color-text-muted);font-size:0.95rem;margin-bottom:0;}
+  .a11y-note{
+    display:flex;gap:0.75rem;background:var(--color-alert-bg);color:var(--color-alert);
+    border-radius:var(--radius-sm);padding:1rem 1.15rem;margin-top:2rem;font-size:0.95rem;
+  }
+  .a11y-note strong{color:var(--color-alert);}
 
-        .chat-controls {
-            padding: 16px;
-            background-color: var(--blanco);
-            border-top: 1px solid #E2E8F0;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+  /* Footer */
+  footer{background:var(--color-primary);color:#EAF0F6;padding-block:2.5rem;}
+  footer a{color:#fff;}
+  .footer-grid{display:grid;grid-template-columns:1fr;gap:1.75rem;}
+  .footer-grid h4{color:#fff;font-size:0.95rem;margin-bottom:0.6rem;}
+  .footer-grid p, .footer-grid a{font-size:0.92rem;color:#CBD9E6;}
+  .footer-bottom{
+    margin-top:2rem;padding-top:1.25rem;border-top:1px solid rgba(255,255,255,0.18);
+    font-size:0.85rem;color:#AEC1D3;
+  }
 
-        .chip {
-            background-color: var(--blanco);
-            color: var(--verde-azulado);
-            border: 2px solid var(--verde-azulado);
-            border-radius: 4px;
-            min-height: 44px; /* Mandatorio */
-            padding: 10px 16px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.2s;
-        }
+  @media (min-width:760px){
+    .hero h1{font-size:2.75rem;}
+    .hero-grid{grid-template-columns:1.05fr 0.95fr;gap:3rem;}
+    .a11y-grid{grid-template-columns:1fr 1fr;}
+  }
 
-        .chip:hover {
-            background-color: var(--verde-azulado);
-            color: var(--blanco);
-        }
+  /* ================= Widget de chat ================= */
+  #chat-launcher{
+    position:fixed;right:1.25rem;bottom:1.25rem;z-index:100;
+    display:inline-flex;align-items:center;gap:0.6rem;
+    min-height:56px;min-width:56px;padding:0.75rem 1.25rem;
+    border-radius:999px;border:none;background:var(--color-secondary);color:#fff;
+    font-family:var(--font-head);font-weight:700;font-size:0.98rem;cursor:pointer;
+    box-shadow:0 8px 20px rgba(26,54,93,0.35);
+  }
+  #chat-launcher:hover{background:var(--color-secondary-dark);}
+  #chat-launcher .icon{color:#fff;}
+  @media (max-width:420px){
+    #chat-launcher .launcher-text{display:none;}
+    #chat-launcher{padding:0.75rem;}
+  }
 
-        .chat-footer {
-            padding: 12px;
-            background-color: #EDF2F7;
-            text-align: center;
-        }
+  #chat-panel{
+    position:fixed;right:1.25rem;bottom:1.25rem;z-index:110;
+    width:min(400px, calc(100vw - 2rem));
+    height:min(640px, calc(100vh - 2rem));
+    background:var(--color-surface);border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-panel);display:flex;flex-direction:column;
+    overflow:hidden;opacity:0;transform:translateY(16px) scale(0.98);
+    pointer-events:none;transition:opacity .22s ease, transform .22s ease;
+  }
+  #chat-panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+  @media (prefers-reduced-motion:reduce){
+    #chat-panel{transition:none;}
+  }
+  @media (max-width:480px){
+    #chat-panel{
+      right:0;bottom:0;width:100vw;height:100vh;border-radius:0;
+    }
+  }
 
-        .handoff-btn {
-            background-color: transparent;
-            color: var(--ambar-oscuro);
-            border: none;
-            text-decoration: underline;
-            font-size: 14px;
-            min-height: 44px; /* Mandatorio */
-            cursor: pointer;
-            font-weight: bold;
-        }
-        
-        .enlace-accion {
-            display: inline-block;
-            margin-top: 10px;
-            background-color: var(--verde-azulado);
-            color: var(--blanco);
-            text-decoration: none;
-            padding: 10px 16px;
-            border-radius: 4px;
-            min-height: 44px;
-            font-weight: bold;
-            text-align: center;
-        }
-    </style>
+  .chat-header{
+    background:var(--color-primary);color:#fff;padding:0.9rem 1rem;
+    display:flex;align-items:flex-start;gap:0.75rem;flex-shrink:0;
+  }
+  .chat-header .mark{
+    width:2.25rem;height:2.25rem;border-radius:50%;background:#fff;color:var(--color-primary);
+    display:flex;align-items:center;justify-content:center;font-family:var(--font-head);
+    font-weight:700;flex-shrink:0;
+  }
+  .chat-header-text{flex:1;min-width:0;}
+  .chat-header-text .name{font-family:var(--font-head);font-weight:700;font-size:1rem;}
+  .chat-header-text .sub{font-size:0.82rem;color:#CBD9E6;margin-top:0.15rem;}
+  .chat-header-actions{display:flex;gap:0.25rem;flex-shrink:0;}
+  .icon-btn{
+    min-width:var(--touch-min);min-height:var(--touch-min);
+    display:flex;align-items:center;justify-content:center;
+    background:transparent;border:none;color:inherit;cursor:pointer;border-radius:var(--radius-sm);
+  }
+  .icon-btn:hover{background:rgba(255,255,255,0.14);}
+
+  .handoff-bar{
+    flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;
+    background:var(--color-alert-bg);color:var(--color-alert);padding:0.6rem 1rem;
+    border-bottom:1px solid var(--color-border);font-size:0.88rem;
+  }
+  .handoff-bar button{
+    flex-shrink:0;min-height:var(--touch-min);padding:0.45rem 0.9rem;
+    border-radius:var(--radius-sm);border:2px solid var(--color-alert);
+    background:transparent;color:var(--color-alert);font-weight:700;cursor:pointer;
+  }
+  .handoff-bar button:hover{background:var(--color-alert);color:#fff;}
+
+  #chat-log{
+    flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:0.5rem;
+    background:var(--color-bg);
+  }
+  .msg-row{display:flex;flex-direction:column;max-width:88%;}
+  .msg-row.bot{align-self:flex-start;align-items:flex-start;}
+  .msg-row.user{align-self:flex-end;align-items:flex-end;}
+  .msg-bubble{
+    padding:0.6rem 0.85rem;border-radius:var(--radius-md);font-size:0.95rem;
+    line-height:1.5;white-space:pre-line;
+  }
+  .msg-row.bot .msg-bubble{
+    background:#fff;color:var(--color-text);border:1px solid var(--color-border);
+    border-bottom-left-radius:4px;
+  }
+  .msg-row.user .msg-bubble{
+    background:var(--color-secondary);color:#fff;border-bottom-right-radius:4px;
+  }
+  .msg-time{font-size:0.72rem;color:var(--color-text-muted);margin-top:0.25rem;padding-inline:0.2rem;}
+
+  .chip-row{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.35rem;max-width:100%;}
+  .chip{
+    min-height:var(--touch-min);padding:0.5rem 0.9rem;border-radius:999px;
+    border:2px solid var(--color-secondary);background:#fff;color:var(--color-secondary-dark);
+    font-weight:600;font-size:0.88rem;cursor:pointer;
+  }
+  .chip:hover{background:var(--color-secondary);color:#fff;}
+  .chip[disabled]{opacity:0.5;cursor:default;}
+  .chip.chosen{background:var(--color-secondary);color:#fff;}
+
+  .progress-note{font-size:0.78rem;color:var(--color-text-muted);margin-top:0.4rem;}
+
+  #chat-form{
+    flex-shrink:0;display:flex;gap:0.5rem;padding:0.75rem;border-top:1px solid var(--color-border);
+    background:#fff;
+  }
+  #chat-input{
+    flex:1;min-height:var(--touch-min);border:2px solid var(--color-border);
+    border-radius:999px;padding:0.6rem 1rem;font-size:0.95rem;font-family:var(--font-body);
+    color:var(--color-text);min-width:0;
+  }
+  #chat-input:focus-visible{outline:3px solid var(--color-focus);outline-offset:1px;}
+  #chat-send{
+    width:var(--touch-min);height:var(--touch-min);border-radius:50%;border:none;
+    background:var(--color-secondary);color:#fff;display:flex;align-items:center;
+    justify-content:center;cursor:pointer;flex-shrink:0;
+  }
+  #chat-send:hover{background:var(--color-secondary-dark);}
+
+  #chat-overlay{
+    position:fixed;inset:0;background:rgba(15,25,32,0.35);z-index:105;
+    opacity:0;pointer-events:none;transition:opacity .22s ease;
+  }
+  #chat-overlay.open{opacity:1;pointer-events:auto;}
+  @media (min-width:481px){ #chat-overlay{display:none;} }
+  @media (prefers-reduced-motion:reduce){ #chat-overlay{transition:none;} }
+</style>
 </head>
 <body>
 
-    <button id="chatbot-launcher" aria-label="Abrir asistente de beneficios sociales" aria-expanded="false">
-        Asistente de Beneficios
-    </button>
+<a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
 
-    <div id="chatbot-widget" class="hidden" role="dialog" aria-modal="true" aria-labelledby="chatbot-title">
-        <div class="chat-header">
-            <h2 id="chatbot-title">Asistente Virtual (IA)</h2>
-            <button class="close-btn" id="close-chat" aria-label="Cerrar el asistente de beneficios">✖</button>
-        </div>
-        
-        <div id="chat-history" class="chat-history" tabindex="0" aria-live="polite" aria-label="Historial de conversación">
-            </div>
-
-        <div id="chat-controls" class="chat-controls">
-            </div>
-
-        <div class="chat-footer">
-            <button class="handoff-btn" aria-label="Solicitar hablar con una persona de atención ciudadana">
-                Necesito ayuda de una persona
-            </button>
-        </div>
+<header class="site-header">
+  <div class="container header-row">
+    <a class="logo" href="#contenido-principal">
+      <span class="mark" aria-hidden="true">P</span>
+      Puente
+    </a>
+    <nav class="site-nav" aria-label="Navegación principal">
+      <a href="#que-resuelve">Qué puedes resolver</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#accesibilidad">Accesibilidad</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <div class="header-actions">
+      <button type="button" class="btn btn-primary" id="hero-open-chat">Iniciar conversación</button>
     </div>
+  </div>
+</header>
 
-    <script>
-        // 1. SISTEMA DE CLASIFICACIÓN RÁPIDA (MÓDULO DE 10 PREGUNTAS)
-        const questions = [
-            {
-                text: "Hola. Soy un asistente virtual (IA) diseñado para orientarte. Para empezar, ¿qué tipo de apoyo principal necesitas hoy?",
-                options: ["Vivienda y Subsidio de Arriendo", "Alimentación y Servicios Básicos", "Otro Apoyo Social / Orientación General"]
-            },
-            {
-                text: "¿Cuál es tu situación habitacional o de vivienda actual?",
-                options: ["No tengo hogar / Situación de emergencia", "Arriendo una propiedad actualmente", "Vivo con familiares / Allegado"]
-            },
-            {
-                text: "¿Los ingresos mensuales totales de tu hogar están por debajo del sueldo mínimo?",
-                options: ["Sí", "No"]
-            },
-            {
-                text: "¿Vives con menores de edad, adultos mayores o personas con discapacidad a tu cargo?",
-                options: ["Sí, tengo personas a cargo", "No, vivo solo/a / adultos independientes"]
-            },
-            {
-                text: "¿Cuentas con tu Registro Social de Hogares o Ficha de Vulnerabilidad actualizada?",
-                options: ["Sí, está al día", "No la tengo / No sé qué es"]
-            },
-            {
-                text: "¿Has postulado anteriormente a algún subsidio de vivienda del Estado?",
-                options: ["Sí, tengo postulación activa", "Sí, pero fue rechazada", "No, nunca he postulado"]
-            },
-            {
-                text: "¿Cuál es tu situación de empleo o trabajo actual?",
-                options: ["Trabajo informal / Independiente", "Desempleado/a / Cesante", "Trabajo formal contratado"]
-            },
-            {
-                text: "Si buscas apoyo habitacional, ¿qué tipo de solución necesitas con mayor urgencia?",
-                options: ["Subsidio de arriendo (pago mensual temporal)", "Vivienda definitiva (compra o construcción)", "No aplica a mi caso"]
-            },
-            {
-                text: "¿En qué zona geográfica del país necesitas aplicar a este beneficio?",
-                options: ["Zona Norte", "Zona Centro / Metropolitana", "Zona Sur"]
-            },
-            {
-                text: "¿Cuentas con cédula de identidad vigente (o documento de extranjería al día)?",
-                options: ["Sí, tengo mis documentos al día", "No, están vencidos o en trámite"]
-            }
-        ];
+<main id="contenido-principal">
 
-        let currentQuestionIndex = 0;
-        const userAnswers = [];
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <h1>Encuentra los beneficios de vivienda que te corresponden, sin vueltas</h1>
+        <p class="lede">Puente es un asistente virtual disponible las 24 horas. Responde
+          preguntas simples sobre postulaciones de vivienda y beneficios sociales,
+          y en cualquier momento puedes pedir hablar con una persona.</p>
+        <div class="hero-ctas">
+          <button type="button" class="btn btn-primary" id="hero-open-chat-2">Iniciar conversación</button>
+          <a class="btn btn-outline" href="#como-funciona">Ver cómo funciona</a>
+        </div>
+        <p class="trust-line">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 12l5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Diseñado según las pautas de accesibilidad WCAG 2.2, nivel AA.
+        </p>
+      </div>
 
-        // Elementos del DOM
-        const launcher = document.getElementById('chatbot-launcher');
-        const widget = document.getElementById('chatbot-widget');
-        const closeBtn = document.getElementById('close-chat');
-        const historyContainer = document.getElementById('chat-history');
-        const controlsContainer = document.getElementById('chat-controls');
+      <div class="chat-mock" aria-hidden="true">
+        <div class="chat-mock-head">
+          <span class="dot"></span>
+          <span>Puente · vista previa</span>
+        </div>
+        <div class="mock-bubble user">¿Puedo postular a un subsidio de arriendo si vivo de allegado?</div>
+        <div class="mock-bubble bot">Sí, esa es una situación válida. Cuéntame un poco más para orientarte mejor.</div>
+        <div class="mock-bubble user">Somos tres personas en la casa y mis ingresos son bajos.</div>
+        <div class="mock-bubble bot">Con esos datos podrías calificar al Subsidio de Arriendo. ¿Hacemos la evaluación rápida?</div>
+      </div>
+    </div>
+  </section>
 
-        // Alternar visibilidad
-        launcher.addEventListener('click', () => {
-            widget.classList.remove('hidden');
-            launcher.setAttribute('aria-expanded', 'true');
-            if (currentQuestionIndex === 0 && historyContainer.innerHTML.trim() === '') {
-                renderQuestion(currentQuestionIndex);
-            }
-            historyContainer.focus();
+  <section id="que-resuelve">
+    <div class="container">
+      <div class="section-head">
+        <h2>Qué puedes resolver aquí</h2>
+        <p>Tres áreas donde Puente puede orientarte de inmediato, en lenguaje simple
+          y sin trámites de por medio.</p>
+      </div>
+      <div class="feature-list">
+        <div class="feature-row">
+          <div class="icon-wrap" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 11l8-6 8 6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 10v9h12v-9" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10 19v-5h4v5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Vivienda y arriendo</h3>
+            <p>Subsidio de arriendo, vivienda definitiva y qué requisitos aplican
+              según tu situación habitacional actual.</p>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="icon-wrap" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="3.2"/>
+              <path d="M5 20c0-3.9 3.1-6 7-6s7 2.1 7 6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Alimentación y beneficios básicos</h3>
+            <p>Orientación sobre ayudas de emergencia, aportes familiares y
+              programas municipales de apoyo.</p>
+          </div>
+        </div>
+        <div class="feature-row">
+          <div class="icon-wrap" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="4" width="14" height="17" rx="2"/>
+              <path d="M8.5 9h7M8.5 13h7M8.5 17h4" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Trámites y documentos</h3>
+            <p>Qué necesitas al día, como el Registro Social de Hogares o tu
+              cédula de identidad, y cómo regularizarlos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="como-funciona" style="background:var(--color-surface);border-top:1px solid var(--color-border);border-bottom:1px solid var(--color-border);">
+    <div class="container">
+      <div class="section-head">
+        <h2>Cómo funciona</h2>
+        <p>Cuatro pasos, siempre con la opción de pasar a una persona cuando lo necesites.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num" aria-hidden="true">1</div>
+          <div>
+            <h3>Cuéntanos qué necesitas</h3>
+            <p>Elige un tema o escribe tu consulta con tus propias palabras.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" aria-hidden="true">2</div>
+          <div>
+            <h3>Responde una evaluación breve</h3>
+            <p>Diez preguntas simples, con respuestas de un solo clic o toque.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" aria-hidden="true">3</div>
+          <div>
+            <h3>Recibe una orientación clara</h3>
+            <p>Un resumen en lenguaje simple con los beneficios que podrían aplicarte.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" aria-hidden="true">4</div>
+          <div>
+            <h3>Continúa con una persona si lo necesitas</h3>
+            <p>Puedes pedir hablar con alguien del equipo en cualquier momento de la conversación.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="accesibilidad" class="a11y-section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Compromiso de accesibilidad</h2>
+        <p>Puente está construido para funcionar con teclado, lectores de pantalla,
+          zoom alto y pantallas pequeñas, siguiendo WCAG 2.2 nivel AA.</p>
+      </div>
+      <div class="a11y-grid">
+        <div class="a11y-item">
+          <div class="icon-wrap" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Contraste y color</h3>
+            <p>Todo el texto cumple una relación de contraste mínima de 4.5:1, y
+              ninguna información depende solo del color.</p>
+          </div>
+        </div>
+        <div class="a11y-item">
+          <div class="icon-wrap" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="7" width="18" height="10" rx="2"/>
+              <path d="M6 11h.01M9 11h.01M12 11h.01M15 11h.01M18 11h.01M7 14h10" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Navegación por teclado</h3>
+            <p>Todo el sitio y el chat se usan sin mouse, con un orden lógico y
+              sin trampas de foco.</p>
+          </div>
+        </div>
+        <div class="a11y-item">
+          <div class="icon-wrap" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 5v14l-5-4H3V9h3l5-4z"/>
+              <path d="M16.5 8.5a5 5 0 010 7" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Zoom y pantallas pequeñas</h3>
+            <p>El sitio se adapta a un 200% de zoom y a anchos desde 320 píxeles,
+              sin desplazamiento horizontal.</p>
+          </div>
+        </div>
+        <div class="a11y-item">
+          <div class="icon-wrap" aria-hidden="true">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19V6a2 2 0 012-2h9l5 5v10a2 2 0 01-2 2H6a2 2 0 01-2-2z"/>
+              <path d="M8 12h8M8 16h5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Lenguaje simple</h3>
+            <p>Las preguntas y respuestas usan un nivel de lectura básico, sin
+              siglas ni jerga administrativa.</p>
+          </div>
+        </div>
+      </div>
+      <div class="a11y-note">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 9v4M12 16.5h.01" stroke-linecap="round"/>
+          <path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/>
+        </svg>
+        <p style="margin:0;"><strong>Puente es una herramienta de orientación</strong>, no
+          el formulario oficial de solicitud. Los resultados que entrega son una guía
+          general y no reemplazan la evaluación de los organismos correspondientes.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer id="contacto">
+  <div class="container footer-grid">
+    <div>
+      <h4>Puente</h4>
+      <p>Prototipo de portafolio enfocado en accesibilidad (WCAG 2.2 AA) para
+        chatbots de postulaciones y beneficios sociales.</p>
+    </div>
+    <div>
+      <h4>Habla con una persona</h4>
+      <p>Línea de ejemplo: 600 000 0000<br>Lunes a viernes, 9:00 a 18:00.</p>
+    </div>
+    <div>
+      <h4>Más información</h4>
+      <p><a href="https://www.chileatiende.gob.cl" target="_blank" rel="noopener">ChileAtiende, portal oficial de trámites</a></p>
+      <p><a href="#accesibilidad">Declaración de accesibilidad</a></p>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    Este sitio es un prototipo conceptual y no está conectado a organismos públicos reales.
+  </div>
+</footer>
+
+<!-- ================= Widget de chat ================= -->
+
+<div id="chat-overlay"></div>
+
+<button type="button" id="chat-launcher" aria-haspopup="dialog" aria-expanded="false" aria-controls="chat-panel">
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+    <path d="M4 4h16v12H8l-4 4V4z" stroke-linejoin="round"/>
+  </svg>
+  <span class="launcher-text">Habla con Puente</span>
+</button>
+
+<section id="chat-panel" role="dialog" aria-modal="true" aria-labelledby="chat-title">
+  <div class="chat-header">
+    <div class="mark" aria-hidden="true">P</div>
+    <div class="chat-header-text">
+      <div class="name" id="chat-title">Puente</div>
+      <div class="sub">Asistente virtual. No soy una persona.</div>
+    </div>
+    <div class="chat-header-actions">
+      <button type="button" class="icon-btn on-dark" id="chat-restart" aria-label="Reiniciar conversación">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M4 4v5h5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4.6 15A8 8 0 1020 12" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button type="button" class="icon-btn on-dark" id="chat-close" aria-label="Cerrar chat">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="handoff-bar">
+    <span>¿Prefieres hablar con una persona?</span>
+    <button type="button" id="handoff-btn">Hablar con una persona</button>
+  </div>
+
+  <div id="chat-log" role="log" aria-live="polite" aria-relevant="additions" tabindex="0" aria-label="Historial de la conversación"></div>
+
+  <form id="chat-form">
+    <label class="sr-only" for="chat-input">Escribe tu mensaje</label>
+    <input type="text" id="chat-input" autocomplete="off" placeholder="Escribe tu consulta...">
+    <button type="submit" id="chat-send" aria-label="Enviar mensaje">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M4 12l16-7-6 16-2.5-6.5L4 12z" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </form>
+</section>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Datos: preguntas de evaluación rápida ---------- */
+  var QUESTIONS = [
+    { q:"¿Qué tipo de apoyo principal necesitas hoy?",
+      options:["Vivienda y subsidio de arriendo","Alimentación y servicios básicos","Otro apoyo social / orientación general"] },
+    { q:"¿Cuál es tu situación habitacional actual?",
+      options:["No tengo hogar / situación de emergencia","Arriendo una propiedad actualmente","Vivo con familiares / allegado"] },
+    { q:"¿Los ingresos mensuales de tu hogar están por debajo del sueldo mínimo?",
+      options:["Sí","No"] },
+    { q:"¿Vives con menores de edad, adultos mayores o personas con discapacidad a tu cargo?",
+      options:["Sí, tengo personas a cargo","No, vivo solo/a o con adultos independientes"] },
+    { q:"¿Cuentas con tu Registro Social de Hogares actualizado?",
+      options:["Sí, está al día","No la tengo / no sé qué es"] },
+    { q:"¿Has postulado antes a algún subsidio de vivienda del Estado?",
+      options:["Sí, tengo postulación activa","Sí, pero fue rechazada","No, nunca he postulado"] },
+    { q:"¿Cuál es tu situación de empleo actual?",
+      options:["Trabajo informal o independiente","Desempleado/a o cesante","Trabajo formal contratado"] },
+    { q:"Si buscas apoyo habitacional, ¿qué necesitas con mayor urgencia?",
+      options:["Subsidio de arriendo (pago mensual temporal)","Vivienda definitiva (compra o construcción)","No aplica a mi caso"] },
+    { q:"¿En qué zona geográfica necesitas postular?",
+      options:["Zona norte","Zona centro / metropolitana","Zona sur"] },
+    { q:"¿Cuentas con cédula de identidad vigente?",
+      options:["Sí, está al día","No, está vencida o en trámite"] }
+  ];
+
+  /* ---------- Estado ---------- */
+  var state = {
+    triageActive:false,
+    triageIndex:0,
+    answers:[],
+    misunderstoodCount:0,
+    lastFocusedBeforeOpen:null
+  };
+
+  var panel = document.getElementById("chat-panel");
+  var overlay = document.getElementById("chat-overlay");
+  var launcher = document.getElementById("chat-launcher");
+  var log = document.getElementById("chat-log");
+  var form = document.getElementById("chat-form");
+  var input = document.getElementById("chat-input");
+
+  /* ---------- Utilidades ---------- */
+  function nowLabel(){
+    var d = new Date();
+    var h = d.getHours().toString().padStart(2,"0");
+    var m = d.getMinutes().toString().padStart(2,"0");
+    return h+":"+m;
+  }
+
+  function normalize(text){
+    return text.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .trim();
+  }
+
+  function addMessage(sender, text){
+    var row = document.createElement("div");
+    row.className = "msg-row " + sender;
+
+    var bubble = document.createElement("div");
+    bubble.className = "msg-bubble";
+    bubble.textContent = text;
+
+    var time = document.createElement("div");
+    time.className = "msg-time";
+    var senderLabel = sender === "bot" ? "Mensaje del asistente" : "Tu mensaje";
+    time.textContent = senderLabel + " · " + nowLabel();
+
+    row.setAttribute("aria-label", senderLabel + ", " + nowLabel() + ": " + text);
+    row.appendChild(bubble);
+    row.appendChild(time);
+    log.appendChild(row);
+    log.scrollTop = log.scrollHeight;
+    return row;
+  }
+
+  function addChips(options, onPick, rowToAttach){
+    var wrap = document.createElement("div");
+    wrap.className = "chip-row";
+    options.forEach(function(opt){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "chip";
+      btn.textContent = opt;
+      btn.addEventListener("click", function(){
+        Array.prototype.forEach.call(wrap.querySelectorAll(".chip"), function(c){
+          c.disabled = true;
+          if(c === btn){ c.classList.add("chosen"); }
         });
+        onPick(opt);
+      });
+      wrap.appendChild(btn);
+    });
+    (rowToAttach || log).appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+    var first = wrap.querySelector(".chip");
+    if(first){ first.focus(); }
+    return wrap;
+  }
 
-        closeBtn.addEventListener('click', () => {
-            widget.classList.add('hidden');
-            launcher.setAttribute('aria-expanded', 'false');
-            launcher.focus();
-        });
+  /* ---------- Flujo de bienvenida ---------- */
+  function startConversation(){
+    log.innerHTML = "";
+    state.triageActive = false;
+    state.triageIndex = 0;
+    state.answers = [];
+    state.misunderstoodCount = 0;
 
-        // Generar un timestamp para las etiquetas ARIA
-        function getTimestamp() {
-            const now = new Date();
-            return `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-        }
+    addMessage("bot","Hola, soy Puente, un asistente virtual. Puedo orientarte sobre postulaciones de vivienda y beneficios sociales. No soy una persona, pero puedes pedirme hablar con una en cualquier momento.");
+    addChips([
+      "Hacer una evaluación rápida (10 preguntas)",
+      "Vivienda y arriendo",
+      "Alimentación y servicios básicos",
+      "Hablar con una persona"
+    ], handleMenuChoice);
+  }
 
-        // Renderizar un mensaje en el historial
-        function appendMessage(text, sender) {
-            const msgDiv = document.createElement('div');
-            msgDiv.classList.add('message', sender);
-            
-            // Cumplimiento ARIA
-            const senderLabel = sender === 'bot' ? 'Mensaje del Asistente Virtual' : 'Tu respuesta';
-            msgDiv.setAttribute('aria-label', `${senderLabel} a las ${getTimestamp()}`);
-            
-            msgDiv.innerHTML = text;
-            historyContainer.appendChild(msgDiv);
-            historyContainer.scrollTop = historyContainer.scrollHeight;
-        }
+  function handleMenuChoice(choice){
+    addMessage("user", choice);
+    if(choice.indexOf("evaluación rápida") !== -1){
+      startTriage();
+    } else if(choice.indexOf("Vivienda") !== -1){
+      addMessage("bot","Puedo orientarte sobre subsidio de arriendo y vivienda definitiva. Para darte una recomendación más precisa, te propongo la evaluación rápida de 10 preguntas.");
+      addChips(["Hacer la evaluación rápida","Volver al menú principal"], handleMenuChoice);
+    } else if(choice.indexOf("Alimentación") !== -1){
+      addMessage("bot","Existen ayudas de emergencia y aportes municipales para alimentación. La evaluación rápida también te ayuda a identificar cuáles podrían aplicarte.");
+      addChips(["Hacer la evaluación rápida","Volver al menú principal"], handleMenuChoice);
+    } else if(choice.indexOf("Hablar con una persona") !== -1){
+      triggerHandoff();
+    } else if(choice.indexOf("Hacer la evaluación rápida") !== -1){
+      startTriage();
+    } else if(choice.indexOf("Volver al menú") !== -1){
+      addChips([
+        "Hacer una evaluación rápida (10 preguntas)",
+        "Vivienda y arriendo",
+        "Alimentación y servicios básicos",
+        "Hablar con una persona"
+      ], handleMenuChoice);
+    }
+  }
 
-        // Renderizar pregunta y opciones
-        function renderQuestion(index) {
-            controlsContainer.innerHTML = ''; // Limpiar opciones anteriores
-            
-            if (index < questions.length) {
-                appendMessage(questions[index].text, 'bot');
-                
-                questions[index].options.forEach((option, i) => {
-                    const btn = document.createElement('button');
-                    btn.classList.add('chip');
-                    btn.textContent = option;
-                    btn.setAttribute('aria-label', `Seleccionar opción: ${option}`);
-                    btn.onclick = () => handleAnswer(option);
-                    controlsContainer.appendChild(btn);
-                });
-                
-                // Dar foco a la primera opción por accesibilidad de teclado
-                setTimeout(() => {
-                    if(controlsContainer.firstChild) controlsContainer.firstChild.focus();
-                }, 100);
+  /* ---------- Evaluación rápida ---------- */
+  function startTriage(){
+    state.triageActive = true;
+    state.triageIndex = 0;
+    state.answers = [];
+    addMessage("bot","Perfecto. Son 10 preguntas breves, solo debes elegir una opción en cada una.");
+    askTriageQuestion();
+  }
 
-            } else {
-                generateDiagnostic();
-            }
-        }
+  function askTriageQuestion(){
+    var i = state.triageIndex;
+    var item = QUESTIONS[i];
+    var row = addMessage("bot", item.q);
+    var note = document.createElement("div");
+    note.className = "progress-note";
+    note.textContent = "Pregunta " + (i+1) + " de " + QUESTIONS.length;
+    row.appendChild(note);
+    addChips(item.options, function(opt){
+      addMessage("user", opt);
+      state.answers[i] = opt;
+      state.triageIndex++;
+      if(state.triageIndex < QUESTIONS.length){
+        askTriageQuestion();
+      } else {
+        finishTriage();
+      }
+    }, row);
+  }
 
-        // Manejar la respuesta del usuario
-        function handleAnswer(answer) {
-            appendMessage(answer, 'user');
-            userAnswers.push(answer);
-            currentQuestionIndex++;
-            controlsContainer.innerHTML = '';
-            
-            // Pausa natural simulada para reducir carga cognitiva y mostrar procesamiento
-            setTimeout(() => {
-                renderQuestion(currentQuestionIndex);
-            }, 600);
-        }
+  function finishTriage(){
+    state.triageActive = false;
+    var a = state.answers;
+    var notes = [];
+    var programs = [];
 
-        // Generar diagnóstico final basado en "No Wrong Door" y lenguaje sencillo
-        function generateDiagnostic() {
-            // Evaluamos respuestas clave de forma simplificada
-            const necesitaVivienda = userAnswers[0].includes("Vivienda");
-            const tieneRSH = userAnswers[4].includes("Sí");
-            const docAlDia = userAnswers[9].includes("Sí");
+    if(a[1] && a[1].indexOf("No tengo hogar") !== -1){
+      programs.push("Apoyo habitacional de emergencia y acompañamiento social municipal");
+      notes.push("Por tu situación de emergencia, te recomendamos priorizar el contacto con una persona del equipo.");
+    }
+    if(a[7] && a[7].indexOf("Subsidio de arriendo") !== -1 && a[2] === "Sí"){
+      programs.push("Subsidio de Arriendo (DS52)");
+    }
+    if(a[7] && a[7].indexOf("Vivienda definitiva") !== -1){
+      programs.push("Fondo Solidario de Elección de Vivienda (DS49)");
+    }
+    if(a[0] && a[0].indexOf("Alimentación") !== -1){
+      programs.push("Aportes municipales de alimentación y Subsidio Único Familiar");
+    }
+    if(a[3] && a[3].indexOf("Sí, tengo personas a cargo") !== -1){
+      notes.push("Tener personas a cargo suele dar prioridad en la asignación de subsidios.");
+    }
+    if(a[4] && a[4].indexOf("No la tengo") !== -1){
+      notes.push("Un primer paso importante es tramitar tu Registro Social de Hogares en la municipalidad, ya que es requisito base para la mayoría de los beneficios.");
+    }
+    if(a[9] && a[9].indexOf("No, está vencida") !== -1){
+      notes.push("Regulariza tu cédula de identidad en el Registro Civil antes de postular, ya que la mayoría de los trámites la requieren vigente.");
+    }
+    if(programs.length === 0){
+      programs.push("Orientación general con un profesional humano, según los detalles de tu caso");
+    }
 
-            let diagnostico = "<strong>Resumen de tu situación:</strong><br><br>";
-            
-            if (!docAlDia) {
-                diagnostico += "Lo principal ahora es actualizar tus documentos de identidad. Sin ellos, los trámites sociales están en pausa.<br><br>";
-                diagnostico += "<a href='#' class='enlace-accion' aria-label='Ir a la página del registro civil'>Revisar cómo renovar tu Cédula</a>";
-            } else if (!tieneRSH) {
-                diagnostico += "Noté que no tienes tu Registro Social de Hogares. Este es el primer paso obligatorio para cualquier ayuda del Estado. No te preocupes, puedes solicitarlo en línea.<br><br>";
-                diagnostico += "<a href='#' class='enlace-accion' aria-label='Abrir página para obtener Registro Social de Hogares'>Solicitar Registro Social de Hogares</a>";
-            } else if (necesitaVivienda) {
-                diagnostico += "Cumples con los primeros requisitos para postular al <strong>Subsidio de Arriendo</strong>. Tienes tus documentos al día y tu registro activo.<br><br>";
-                diagnostico += "<a href='#' class='enlace-accion' aria-label='Abrir página con los requisitos para postular al subsidio de arriendo'>Descargar Requisitos para Vivienda</a>";
-            } else {
-                diagnostico += "Gracias por la información. Según lo que me cuentas, te sugiero revisar la red de protección social general, donde encontrarás apoyo en servicios básicos.<br><br>";
-                diagnostico += "<a href='#' class='enlace-accion' aria-label='Ir a la red de protección social'>Ver opciones de apoyo general</a>";
-            }
+    var summary = "Con tus respuestas, esto es lo que podría aplicarte:\n\n" +
+      programs.map(function(p){ return "• " + p; }).join("\n");
+    if(notes.length){
+      summary += "\n\n" + notes.join("\n");
+    }
+    summary += "\n\nEsto es una orientación general, no un resultado oficial.";
 
-            appendMessage(diagnostico, 'bot');
-            
-            // Botón de reinicio
-            const resetBtn = document.createElement('button');
-            resetBtn.classList.add('chip');
-            resetBtn.textContent = "Volver a empezar";
-            resetBtn.onclick = () => {
-                currentQuestionIndex = 0;
-                userAnswers.length = 0;
-                historyContainer.innerHTML = '';
-                renderQuestion(0);
-            };
-            controlsContainer.appendChild(resetBtn);
-        }
-    </script>
+    var row = addMessage("bot", summary);
+    var linkRow = document.createElement("div");
+    linkRow.style.marginTop = "0.5rem";
+    var link = document.createElement("a");
+    link.href = "https://www.chileatiende.gob.cl";
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.textContent = "Ver información oficial en ChileAtiende";
+    linkRow.appendChild(link);
+    row.appendChild(linkRow);
+
+    addChips(["Hablar con una persona","Volver a empezar"], function(choice){
+      addMessage("user", choice);
+      if(choice.indexOf("Hablar con una persona") !== -1){
+        triggerHandoff();
+      } else {
+        startConversation();
+      }
+    });
+  }
+
+  /* ---------- Traspaso humano ---------- */
+  function triggerHandoff(){
+    addMessage("bot","Te conecto con una persona del equipo. Puedes llamar al 600 000 0000, de lunes a viernes de 9:00 a 18:00, o dejar tus datos y te contactamos.");
+    state.misunderstoodCount = 0;
+  }
+
+  document.getElementById("handoff-btn").addEventListener("click", triggerHandoff);
+
+  /* ---------- Entrada de texto libre ---------- */
+  var KEYWORDS = {
+    vivienda:["Vivienda y arriendo"],
+    arriendo:["Vivienda y arriendo"],
+    subsidio:["Vivienda y arriendo"],
+    alimentacion:["Alimentación y servicios básicos"],
+    comida:["Alimentación y servicios básicos"],
+    persona:["Hablar con una persona"],
+    humano:["Hablar con una persona"],
+    evaluacion:["Hacer una evaluación rápida (10 preguntas)"]
+  };
+
+  function routeFreeText(text){
+    var norm = normalize(text);
+    var matchedChoice = null;
+    Object.keys(KEYWORDS).forEach(function(key){
+      if(norm.indexOf(key) !== -1 && !matchedChoice){
+        matchedChoice = KEYWORDS[key][0];
+      }
+    });
+
+    if(matchedChoice){
+      state.misunderstoodCount = 0;
+      handleMenuChoice(matchedChoice);
+      return;
+    }
+
+    state.misunderstoodCount++;
+    if(state.misunderstoodCount >= 2){
+      addMessage("bot","No logro identificar bien tu consulta. Prefiero conectarte con una persona para que te ayude directamente.");
+      triggerHandoff();
+      state.misunderstoodCount = 0;
+    } else {
+      addMessage("bot","No estoy seguro de haber entendido. ¿Puedes elegir una de estas opciones?");
+      addChips([
+        "Hacer una evaluación rápida (10 preguntas)",
+        "Vivienda y arriendo",
+        "Alimentación y servicios básicos",
+        "Hablar con una persona"
+      ], handleMenuChoice);
+    }
+  }
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var text = input.value.trim();
+    if(!text) return;
+    addMessage("user", text);
+    input.value = "";
+    if(state.triageActive){
+      addMessage("bot","Durante la evaluación, elige una de las opciones de arriba para poder ayudarte mejor.");
+      return;
+    }
+    routeFreeText(text);
+  });
+
+  /* ---------- Apertura, cierre y foco accesible del panel ---------- */
+  function getFocusable(){
+    return panel.querySelectorAll(
+      'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+  }
+
+  function openChat(){
+    state.lastFocusedBeforeOpen = document.activeElement;
+    panel.classList.add("open");
+    overlay.classList.add("open");
+    launcher.setAttribute("aria-expanded","true");
+    if(log.children.length === 0){ startConversation(); }
+    document.getElementById("chat-close").focus();
+    document.addEventListener("keydown", onPanelKeydown);
+  }
+
+  function closeChat(){
+    panel.classList.remove("open");
+    overlay.classList.remove("open");
+    launcher.setAttribute("aria-expanded","false");
+    document.removeEventListener("keydown", onPanelKeydown);
+    if(state.lastFocusedBeforeOpen){ state.lastFocusedBeforeOpen.focus(); }
+    else { launcher.focus(); }
+  }
+
+  function onPanelKeydown(e){
+    if(e.key === "Escape"){
+      closeChat();
+      return;
+    }
+    if(e.key === "Tab"){
+      var focusable = getFocusable();
+      if(focusable.length === 0) return;
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if(e.shiftKey && document.activeElement === first){
+        e.preventDefault(); last.focus();
+      } else if(!e.shiftKey && document.activeElement === last){
+        e.preventDefault(); first.focus();
+      }
+    }
+  }
+
+  launcher.addEventListener("click", openChat);
+  document.getElementById("hero-open-chat").addEventListener("click", openChat);
+  document.getElementById("hero-open-chat-2").addEventListener("click", openChat);
+  document.getElementById("chat-close").addEventListener("click", closeChat);
+  document.getElementById("chat-restart").addEventListener("click", startConversation);
+  overlay.addEventListener("click", closeChat);
+
+})();
+</script>
 </body>
 </html>
