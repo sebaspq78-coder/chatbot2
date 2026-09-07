@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente de Beneficios Sociales</title>
+    <style>
+        /* =========================================
+           2. Arquitectura del Color y Contraste
+           3. Sistema Tipográfico y Legibilidad
+           ========================================= */
+        :root {
+            --azul-oscuro: #1A365D;    /* Identidad y Cabecera */
+            --verde-azulado: #285E61;  /* Acciones y Apoyo */
+            --ambar-oscuro: #975A16;   /* Alertas, Críticos y Foco */
+            --fondo-claro: #F7FAFC;
+            --texto-oscuro: #1A202C;
+            --blanco: #FFFFFF;
+        }
+
+        body {
+            font-family: Arial, Roboto, 'Open Sans', sans-serif;
+            background-color: #E2E8F0;
+            margin: 0;
+            padding: 0;
+            text-align: left; /* Alineación justificada prohibida */
+            color: var(--texto-oscuro);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        /* Restricciones de Estilo: Cursivas y Mayúsculas sostenidas prohibidas (aplicado por omisión) */
+
+        /* =========================================
+           4. Diseño del Widget y Adaptabilidad
+           ========================================= */
+        #chatbot-launcher {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--azul-oscuro);
+            color: var(--blanco);
+            border: none;
+            border-radius: 8px;
+            min-height: 44px; /* Mandatorio: Objetivo Táctil */
+            min-width: 44px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        #chatbot-widget {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 90%;
+            max-width: 400px;
+            min-width: 320px; /* Reflow a 320px garantizado */
+            height: 80vh;
+            max-height: 600px;
+            background-color: var(--fondo-claro);
+            border-radius: 8px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+            border: 1px solid #CBD5E0;
+        }
+
+        #chatbot-widget.hidden {
+            display: none;
+        }
+
+        /* =========================================
+           5. Navegabilidad y Objetivos de Interacción
+           ========================================= */
+        /* Foco Visual de Alto Contraste */
+        *:focus {
+            outline: 4px solid var(--ambar-oscuro) !important;
+            outline-offset: 2px;
+        }
+
+        .chat-header {
+            background-color: var(--azul-oscuro);
+            color: var(--blanco);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: transparent;
+            color: var(--blanco);
+            border: none;
+            font-size: 20px;
+            min-height: 44px; /* Mandatorio */
+            min-width: 44px;
+            cursor: pointer;
+        }
+
+        /* =========================================
+           6. Flujo de Diálogo y Traspaso Humano
+           ========================================= */
+        .chat-history {
+            flex-grow: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .message.bot {
+            background-color: var(--blanco);
+            color: var(--texto-oscuro);
+            border: 1px solid #E2E8F0;
+            align-self: flex-start;
+        }
+
+        .message.user {
+            background-color: var(--verde-azulado);
+            color: var(--blanco);
+            align-self: flex-end;
+        }
+
+        .chat-controls {
+            padding: 16px;
+            background-color: var(--blanco);
+            border-top: 1px solid #E2E8F0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .chip {
+            background-color: var(--blanco);
+            color: var(--verde-azulado);
+            border: 2px solid var(--verde-azulado);
+            border-radius: 4px;
+            min-height: 44px; /* Mandatorio */
+            padding: 10px 16px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .chip:hover {
+            background-color: var(--verde-azulado);
+            color: var(--blanco);
+        }
+
+        .chat-footer {
+            padding: 12px;
+            background-color: #EDF2F7;
+            text-align: center;
+        }
+
+        .handoff-btn {
+            background-color: transparent;
+            color: var(--ambar-oscuro);
+            border: none;
+            text-decoration: underline;
+            font-size: 14px;
+            min-height: 44px; /* Mandatorio */
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .enlace-accion {
+            display: inline-block;
+            margin-top: 10px;
+            background-color: var(--verde-azulado);
+            color: var(--blanco);
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            min-height: 44px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <button id="chatbot-launcher" aria-label="Abrir asistente de beneficios sociales" aria-expanded="false">
+        Asistente de Beneficios
+    </button>
+
+    <div id="chatbot-widget" class="hidden" role="dialog" aria-modal="true" aria-labelledby="chatbot-title">
+        <div class="chat-header">
+            <h2 id="chatbot-title">Asistente Virtual (IA)</h2>
+            <button class="close-btn" id="close-chat" aria-label="Cerrar el asistente de beneficios">✖</button>
+        </div>
+        
+        <div id="chat-history" class="chat-history" tabindex="0" aria-live="polite" aria-label="Historial de conversación">
+            </div>
+
+        <div id="chat-controls" class="chat-controls">
+            </div>
+
+        <div class="chat-footer">
+            <button class="handoff-btn" aria-label="Solicitar hablar con una persona de atención ciudadana">
+                Necesito ayuda de una persona
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 1. SISTEMA DE CLASIFICACIÓN RÁPIDA (MÓDULO DE 10 PREGUNTAS)
+        const questions = [
+            {
+                text: "Hola. Soy un asistente virtual (IA) diseñado para orientarte. Para empezar, ¿qué tipo de apoyo principal necesitas hoy?",
+                options: ["Vivienda y Subsidio de Arriendo", "Alimentación y Servicios Básicos", "Otro Apoyo Social / Orientación General"]
+            },
+            {
+                text: "¿Cuál es tu situación habitacional o de vivienda actual?",
+                options: ["No tengo hogar / Situación de emergencia", "Arriendo una propiedad actualmente", "Vivo con familiares / Allegado"]
+            },
+            {
+                text: "¿Los ingresos mensuales totales de tu hogar están por debajo del sueldo mínimo?",
+                options: ["Sí", "No"]
+            },
+            {
+                text: "¿Vives con menores de edad, adultos mayores o personas con discapacidad a tu cargo?",
+                options: ["Sí, tengo personas a cargo", "No, vivo solo/a / adultos independientes"]
+            },
+            {
+                text: "¿Cuentas con tu Registro Social de Hogares o Ficha de Vulnerabilidad actualizada?",
+                options: ["Sí, está al día", "No la tengo / No sé qué es"]
+            },
+            {
+                text: "¿Has postulado anteriormente a algún subsidio de vivienda del Estado?",
+                options: ["Sí, tengo postulación activa", "Sí, pero fue rechazada", "No, nunca he postulado"]
+            },
+            {
+                text: "¿Cuál es tu situación de empleo o trabajo actual?",
+                options: ["Trabajo informal / Independiente", "Desempleado/a / Cesante", "Trabajo formal contratado"]
+            },
+            {
+                text: "Si buscas apoyo habitacional, ¿qué tipo de solución necesitas con mayor urgencia?",
+                options: ["Subsidio de arriendo (pago mensual temporal)", "Vivienda definitiva (compra o construcción)", "No aplica a mi caso"]
+            },
+            {
+                text: "¿En qué zona geográfica del país necesitas aplicar a este beneficio?",
+                options: ["Zona Norte", "Zona Centro / Metropolitana", "Zona Sur"]
+            },
+            {
+                text: "¿Cuentas con cédula de identidad vigente (o documento de extranjería al día)?",
+                options: ["Sí, tengo mis documentos al día", "No, están vencidos o en trámite"]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        const userAnswers = [];
+
+        // Elementos del DOM
+        const launcher = document.getElementById('chatbot-launcher');
+        const widget = document.getElementById('chatbot-widget');
+        const closeBtn = document.getElementById('close-chat');
+        const historyContainer = document.getElementById('chat-history');
+        const controlsContainer = document.getElementById('chat-controls');
+
+        // Alternar visibilidad
+        launcher.addEventListener('click', () => {
+            widget.classList.remove('hidden');
+            launcher.setAttribute('aria-expanded', 'true');
+            if (currentQuestionIndex === 0 && historyContainer.innerHTML.trim() === '') {
+                renderQuestion(currentQuestionIndex);
+            }
+            historyContainer.focus();
+        });
+
+        closeBtn.addEventListener('click', () => {
+            widget.classList.add('hidden');
+            launcher.setAttribute('aria-expanded', 'false');
+            launcher.focus();
+        });
+
+        // Generar un timestamp para las etiquetas ARIA
+        function getTimestamp() {
+            const now = new Date();
+            return `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+        }
+
+        // Renderizar un mensaje en el historial
+        function appendMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', sender);
+            
+            // Cumplimiento ARIA
+            const senderLabel = sender === 'bot' ? 'Mensaje del Asistente Virtual' : 'Tu respuesta';
+            msgDiv.setAttribute('aria-label', `${senderLabel} a las ${getTimestamp()}`);
+            
+            msgDiv.innerHTML = text;
+            historyContainer.appendChild(msgDiv);
+            historyContainer.scrollTop = historyContainer.scrollHeight;
+        }
+
+        // Renderizar pregunta y opciones
+        function renderQuestion(index) {
+            controlsContainer.innerHTML = ''; // Limpiar opciones anteriores
+            
+            if (index < questions.length) {
+                appendMessage(questions[index].text, 'bot');
+                
+                questions[index].options.forEach((option, i) => {
+                    const btn = document.createElement('button');
+                    btn.classList.add('chip');
+                    btn.textContent = option;
+                    btn.setAttribute('aria-label', `Seleccionar opción: ${option}`);
+                    btn.onclick = () => handleAnswer(option);
+                    controlsContainer.appendChild(btn);
+                });
+                
+                // Dar foco a la primera opción por accesibilidad de teclado
+                setTimeout(() => {
+                    if(controlsContainer.firstChild) controlsContainer.firstChild.focus();
+                }, 100);
+
+            } else {
+                generateDiagnostic();
+            }
+        }
+
+        // Manejar la respuesta del usuario
+        function handleAnswer(answer) {
+            appendMessage(answer, 'user');
+            userAnswers.push(answer);
+            currentQuestionIndex++;
+            controlsContainer.innerHTML = '';
+            
+            // Pausa natural simulada para reducir carga cognitiva y mostrar procesamiento
+            setTimeout(() => {
+                renderQuestion(currentQuestionIndex);
+            }, 600);
+        }
+
+        // Generar diagnóstico final basado en "No Wrong Door" y lenguaje sencillo
+        function generateDiagnostic() {
+            // Evaluamos respuestas clave de forma simplificada
+            const necesitaVivienda = userAnswers[0].includes("Vivienda");
+            const tieneRSH = userAnswers[4].includes("Sí");
+            const docAlDia = userAnswers[9].includes("Sí");
+
+            let diagnostico = "<strong>Resumen de tu situación:</strong><br><br>";
+            
+            if (!docAlDia) {
+                diagnostico += "Lo principal ahora es actualizar tus documentos de identidad. Sin ellos, los trámites sociales están en pausa.<br><br>";
+                diagnostico += "<a href='#' class='enlace-accion' aria-label='Ir a la página del registro civil'>Revisar cómo renovar tu Cédula</a>";
+            } else if (!tieneRSH) {
+                diagnostico += "Noté que no tienes tu Registro Social de Hogares. Este es el primer paso obligatorio para cualquier ayuda del Estado. No te preocupes, puedes solicitarlo en línea.<br><br>";
+                diagnostico += "<a href='#' class='enlace-accion' aria-label='Abrir página para obtener Registro Social de Hogares'>Solicitar Registro Social de Hogares</a>";
+            } else if (necesitaVivienda) {
+                diagnostico += "Cumples con los primeros requisitos para postular al <strong>Subsidio de Arriendo</strong>. Tienes tus documentos al día y tu registro activo.<br><br>";
+                diagnostico += "<a href='#' class='enlace-accion' aria-label='Abrir página con los requisitos para postular al subsidio de arriendo'>Descargar Requisitos para Vivienda</a>";
+            } else {
+                diagnostico += "Gracias por la información. Según lo que me cuentas, te sugiero revisar la red de protección social general, donde encontrarás apoyo en servicios básicos.<br><br>";
+                diagnostico += "<a href='#' class='enlace-accion' aria-label='Ir a la red de protección social'>Ver opciones de apoyo general</a>";
+            }
+
+            appendMessage(diagnostico, 'bot');
+            
+            // Botón de reinicio
+            const resetBtn = document.createElement('button');
+            resetBtn.classList.add('chip');
+            resetBtn.textContent = "Volver a empezar";
+            resetBtn.onclick = () => {
+                currentQuestionIndex = 0;
+                userAnswers.length = 0;
+                historyContainer.innerHTML = '';
+                renderQuestion(0);
+            };
+            controlsContainer.appendChild(resetBtn);
+        }
+    </script>
+</body>
+</html>
